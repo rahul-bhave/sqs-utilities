@@ -27,8 +27,6 @@ def get_messages_from_queue(queue_url):
     sqs_client = boto3.client('sqs')
     _logger.info(f'Reading the message from "{queue_url}"')
     queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
-
-    # while True:
     response = queue.receive_messages(QueueUrl=queue.url, AttributeNames=['All'])
     _logger.debug(f'Triggered queue_url response: "{response}"')
     if response != []:
