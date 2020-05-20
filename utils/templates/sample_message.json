@@ -1,0 +1,18 @@
+{
+    "employee":[
+       {
+          "Id":"1",
+          "MessageBody":"boto3",
+          "MessageAttributes":{
+             "Author":{
+                "StringValue":"Daniel",
+                "DataType":"String"
+             },
+             "Price":{
+                "StringValue":"200",
+                "DataType":"String"
+             }
+          }
+       }
+    ]
+ }
