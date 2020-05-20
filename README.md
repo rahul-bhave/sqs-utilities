@@ -6,7 +6,9 @@ a) sqs_utilities.py: This file contains following two methods:
 _a.1_: Method to read from sqs queue
 _a.2_: Method to send message to sqs queue
 
-b) conf/queue_list.conf file: This will list out all the sqs queues first-queue, first-failure-queue, second-queue
+b) conf/sqs_utilities_conf.py file: This will list out all the sqs queues first-queue, first-failure-queue, second-queue
+
+c) 
 
 _What will be done in sqs_utilities.py ?_:
 
