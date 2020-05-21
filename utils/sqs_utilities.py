@@ -28,6 +28,7 @@ class sqsutility():
     # class for all sqs utility methods
     logger = logging.getLogger(__name__)
 
+    # declaring templates directory
     template_directory = 'templates'
 
     def get_messages_from_queue(self,queue_url):
@@ -71,8 +72,11 @@ class sqsutility():
         self.logger.info(response.get('MessageId'))
 
 class MyListener(SqsListener):
-    def handle_message(self, body, attributes, messages_attributes):
-        run_my_function(body['param1'], body['param2'])
+    """
+    Included only handle method neew to write code around it
+    """
+    def handle_message(self,body, attributes, MessageAttributeNames=['Price']):
+        pass
 
 if __name__=='__main__':
     #Creating an instance of the class
