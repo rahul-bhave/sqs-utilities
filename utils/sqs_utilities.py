@@ -11,6 +11,7 @@ import logging
 import os,sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import conf.sqs_utilities_conf as conf
+import conf.aws_configuration_conf as aws_conf
 from pythonjsonlogger import jsonlogger
 from sqs_listener import SqsListener
 
@@ -22,7 +23,7 @@ logger.setLevel(logging.INFO)
 logger.addHandler(log_handler)
 
 #setting environment variable
-os.environ["AWS_ACCOUNT_ID"]="044779004926"
+os.environ["AWS_ACCOUNT_ID"]= aws_conf.AWS_ACCOUNT_ID
 
 class sqsutility():
     # class for all sqs utility methods
