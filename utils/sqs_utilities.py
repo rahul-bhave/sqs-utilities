@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import conf.sqs_utilities_conf as conf
 import conf.aws_configuration_conf as aws_conf
 from pythonjsonlogger import jsonlogger
+from sqs_listener.daemon import Daemon
 from sqs_listener import SqsListener
 
 # logging
@@ -76,8 +77,14 @@ class MyListener(SqsListener):
     """
     Included only handle method neew to write code around it
     """
-    def handle_message(self,body, attributes, MessageAttributeNames=['Price']):
-        pass
+    def handle_message(self,body, attributes, MessageAttributeNames=['All']):
+        return
+
+class MyDaemon(Daemon):
+    def run(self):
+        print("Initializing listener")
+        listener = MyListener('first-queue')
+        listener.listen()
 
 if __name__=='__main__':
     #Creating an instance of the class
@@ -88,9 +95,28 @@ if __name__=='__main__':
     #2 sample usage for ssend message to sqs queue
     for every_queue_url in conf.QUEUE_URL_LIST:
         sqsutility_obj.send_message_to_queue(every_queue_url)
+    """
     #3 sample example for listner
     for every_queue_url in conf.QUEUE_URL_LIST:
         listener = MyListener(every_queue_url)
         listener.listen()
+    """
+    daemon_obj = MyDaemon('/var/run/sqs_daemon.pid')
+    if len(sys.argv) == 2:
+        if 'start' == sys.argv[1]:
+            print("Starting listener daemon")
+            daemon_obj.start()
+        elif 'stop' == sys.argv[1]:
+            print("Attempting to stop the daemon")
+            daemon_obj.stop()
+        elif 'restart' == sys.argv[1]:
+            daemon_obj.restart()
+        else:
+            print("Unknown command")
+            sys.exit(2)
+        sys.exit(0)
+    else:
+        print("usage: %s start|stop|restart" % sys.argv[0])
+        sys.exit(2)
 else:
         self.logger.info('ERROR: Received incorrect comand line input arguments')
