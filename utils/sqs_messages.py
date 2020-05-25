@@ -1,7 +1,7 @@
 """
 This file will contain:
 a) Method to read from a queue
-b) Method to parse the message from sqs queue and break when you find a required message
+b) Method to send the mesage to queue
 c) Method send messages to each queue and show the output recognizes which queue received which message
 
 """
@@ -25,8 +25,11 @@ logger.addHandler(log_handler)
 
 #setting environment variable
 os.environ["AWS_ACCOUNT_ID"]= aws_conf.AWS_ACCOUNT_ID
+os.environ['AWS_DEFAULT_REGION'] = aws_conf.AWS_DEFAULT_REGION
+os.environ['AWS_ACCESS_KEY_ID'] = aws_conf.AWS_ACCESS_KEY_ID
+os.environ['AWS_SECRET_ACCESS_KEY'] = aws_conf.AWS_SECRET_ACCESS_KEY
 
-class sqsutility():
+class sqsmessage():
     # class for all sqs utility methods
     logger = logging.getLogger(__name__)
 
@@ -73,50 +76,14 @@ class sqsutility():
         response = squeue.send_message(MessageBody=json.dumps(sample_dict), MessageAttributes={})
         self.logger.info(response.get('MessageId'))
 
-class MyListener(SqsListener):
-    """
-    Included only handle method neew to write code around it
-    """
-    def handle_message(self,body, attributes, MessageAttributeNames=['All']):
-        return
-
-class MyDaemon(Daemon):
-    def run(self):
-        print("Initializing listener")
-        listener = MyListener('first-queue')
-        listener.listen()
-
 if __name__=='__main__':
     #Creating an instance of the class
-    sqsutility_obj = sqsutility()
+    sqsmessage_obj = sqsmessage()
     #1 sample usage of connect to sqs queue and get message from sqs queue
     for every_queue_url in conf.QUEUE_URL_LIST:
-        sqsutility_obj.get_messages_from_queue(every_queue_url)
+        sqsmessage_obj.get_messages_from_queue(every_queue_url)
     #2 sample usage for ssend message to sqs queue
     for every_queue_url in conf.QUEUE_URL_LIST:
-        sqsutility_obj.send_message_to_queue(every_queue_url)
-    """
-    #3 sample example for listner
-    for every_queue_url in conf.QUEUE_URL_LIST:
-        listener = MyListener(every_queue_url)
-        listener.listen()
-    """
-    daemon_obj = MyDaemon('/var/run/sqs_daemon.pid')
-    if len(sys.argv) == 2:
-        if 'start' == sys.argv[1]:
-            print("Starting listener daemon")
-            daemon_obj.start()
-        elif 'stop' == sys.argv[1]:
-            print("Attempting to stop the daemon")
-            daemon_obj.stop()
-        elif 'restart' == sys.argv[1]:
-            daemon_obj.restart()
-        else:
-            print("Unknown command")
-            sys.exit(2)
-        sys.exit(0)
-    else:
-        print("usage: %s start|stop|restart" % sys.argv[0])
-        sys.exit(2)
+        sqsmessage_obj.send_message_to_queue(every_queue_url)
 else:
-        self.logger.info('ERROR: Received incorrect comand line input arguments')
+        print('ERROR: Received incorrect comand line input arguments')
