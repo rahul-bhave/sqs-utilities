@@ -46,8 +46,25 @@ high_priority_queue = QueueConfig('high-priority-queue', high_priority_bus)
 my_listener = MyListener([low_priority_queue, high_priority_queue])
 my_listener.listen()
 
+def get_messages_from_queue(queue_url):
+    """Generates messages from an SQS queue.
+
+    Note: this continues to generate messages until the queue is empty.
+    Every message on the queue will be deleted.
+
+    :param queue_url: URL of the SQS queue to drain.
+
+    """
+    sqs_client = boto3.client('sqs')
+    queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
+    while True:
+        response = queue.receive_messages(QueueUrl=queue.url)
+        if response != []:
+            print(response)
+
 if __name__=='__main__':
     "testing the multi_sqs_listner"
+    """
     sqs_client = boto3.client('sqs',
         aws_access_key_id=aws_conf.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=aws_conf.AWS_SECRET_ACCESS_KEY,
@@ -64,3 +81,8 @@ if __name__=='__main__':
     elif response == []:
         print(f'No messages in the queue "{queue_url}"')
     low_q.send_message(MessageBody='Low Priority message')
+    """
+    low_q_url = 'low-priority-queue'
+    high_q_url = 'high-priority-queue'
+    get_messages_from_queue(low_q_url)
+    get_messages_from_queue(high_q_url)
