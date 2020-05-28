@@ -5,6 +5,7 @@ b) Method to send the mesage to queue
 c) Method send messages to each queue and show the output recognizes which queue received which message
 
 """
+import argparse
 import boto3
 import json
 import logging
@@ -13,8 +14,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import conf.sqs_utilities_conf as conf
 import conf.aws_configuration_conf as aws_conf
 from pythonjsonlogger import jsonlogger
-from sqs_listener.daemon import Daemon
-from sqs_listener import SqsListener
 
 # logging
 log_handler = logging.StreamHandler()
@@ -45,17 +44,11 @@ class sqsmessage():
         _logger = logging.getLogger(__name__)
         _logger.setLevel(logging.DEBUG)
         sqs_client = boto3.client('sqs')
-        self.logger.info(f'Reading the message from "{queue_url}"')
         queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
-        response = queue.receive_messages(QueueUrl=queue.url, AttributeNames=['All'])
-        if response != []:
-            responses = set()
-            for response in response:
-                responses.add(response.body)
-                self.logger.info(responses)
-                return responses
-        elif response == []:
-            self.logger.info(f'No messages in the queue "{queue_url}"')
+        while True:
+            response = queue.receive_messages(QueueUrl=queue.url, AttributeNames=["Price"], MaxNumberOfMessages=10)
+            if response != []:
+                print(response)
 
     def send_message_to_queue(self,queue_url):
         """
@@ -79,11 +72,10 @@ class sqsmessage():
 if __name__=='__main__':
     #Creating an instance of the class
     sqsmessage_obj = sqsmessage()
-    #1 sample usage of connect to sqs queue and get message from sqs queue
-    for every_queue_url in conf.QUEUE_URL_LIST:
-        sqsmessage_obj.get_messages_from_queue(every_queue_url)
-    #2 sample usage for ssend message to sqs queue
-    for every_queue_url in conf.QUEUE_URL_LIST:
-        sqsmessage_obj.send_message_to_queue(every_queue_url)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--queue_url", required=True, help="Queue URL")
+    args = ap.parse_args()
+    for message in sqsmessage_obj.get_messages_from_queue(args.queue_url):
+        print(json.dumps(message).encode('utf-8'))
 else:
         print('ERROR: Received incorrect comand line input arguments')

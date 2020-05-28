@@ -14,9 +14,10 @@ import os,sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import conf.sqs_utilities_conf as conf
 import conf.aws_configuration_conf as aws_conf
+from concurrent.futures import ThreadPoolExecutor
 from pythonjsonlogger import jsonlogger
-from sqs_listener.daemon import Daemon
-from sqs_listener import SqsListener
+from time import sleep
+
 
 # logging
 log_handler = logging.StreamHandler()
@@ -38,7 +39,12 @@ class sqsmessage():
     # declaring templates directory
     template_directory = 'templates'
 
-    async def get_messages_from_queue(self,future,queue_url):
+    def return_after_5_secs(message):
+        sleep(5)
+        return message
+    pool = ThreadPoolExecutor(3)
+
+    async def get_messages_from_queue(self,queue_url):
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
@@ -46,22 +52,19 @@ class sqsmessage():
         """
         _logger = logging.getLogger(__name__)
         _logger.setLevel(logging.DEBUG)
-        await future
         sqs_client = boto3.client('sqs')
-        self.logger.info(f'Reading the message from "{queue_url}"')
         queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
-        response = queue.receive_messages(QueueUrl=queue.url, AttributeNames=['All'])
-        if response != []:
-            responses = set()
-            for response in response:
-                responses.add(response.body)
-                self.logger.info(responses)
-                return responses
-        elif response == []:
-            self.logger.info(f'No messages in the queue "{queue_url}"')
+        while True:
+            response = queue.receive_messages(QueueUrl=queue.url, AttributeNames=["Price"], MaxNumberOfMessages=10)
+            if response != []:
+                print(response)
+        future = pool.submit(sqsmessage_obj.return_after_5_secs, (f"result: {queue_url}"))
+        awaitable = asyncio.wrap_future(future)
+        print(f"waiting result: {queue_url}")
+        return await awaitable
 
 
-    async def send_message_to_queue(self,future,queue_url):
+    async def send_message_to_queue(self,queue_url):
         """
         Sends message to specific queue
         :param queue_url: URL of the SQS queue to drain.
@@ -69,7 +72,6 @@ class sqsmessage():
         """
         _logger = logging.getLogger(__name__)
         _logger.setLevel(logging.DEBUG)
-        await asyncio.sleep(3)
         current_directory = os.path.dirname(os.path.realpath(__file__))
         message_template = os.path.join(current_directory,self.template_directory,'sample_message.json')
         with open(message_template,'r') as fp:
@@ -80,31 +82,20 @@ class sqsmessage():
         squeue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
         response = squeue.send_message(MessageBody=json.dumps(sample_dict), MessageAttributes={})
         self.logger.info(response.get('MessageId'))
-        future.done()
-        future.set_result("future is resolved")
+
 
 async def main():
     """
     Schedule calls concurrently
     # https://www.educative.io/blog/python-concurrency-making-sense-of-asyncio
     """
-    future = Future()
     sqsmessage_obj = sqsmessage()
-    loop = asyncio.get_event_loop()
+    tasks = [sqsmessage_obj.get_messages_from_queue('first-queue'), sqsmessage_obj.get_messages_from_queue('second-queue')]
+    result = await asyncio.gather(*tasks)
 
-    t1 = loop.create_task(sqsmessage_obj.send_message_to_queue(future,'first-queue'))
-    t2 = loop.create_task(sqsmessage_obj.get_messages_from_queue(future,'first-queue'))
-    t3 = loop.create_task(sqsmessage_obj.send_message_to_queue(future,'second-queue'))
-    t4 = loop.create_task(sqsmessage_obj.get_messages_from_queue(future,'second-queue'))
-    t5 = loop.create_task(sqsmessage_obj.send_message_to_queue(future,'first-failure-queue'))
-    t6 = loop.create_task(sqsmessage_obj.get_messages_from_queue(future,'first-failure-queue'))
-
-    await t6, t5, t4, t3, t2, t1
 
 if __name__=='__main__':
     #Running asyncio main
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    # asyncio.run(main())
+    asyncio.run(main())
 else:
     print('ERROR: Received incorrect comand line input arguments')

@@ -31,8 +31,23 @@ class MyListener(SqsListener):
     """
     Included only handle method neew to write code around it
     """
-    def handle_message(self, body, attributes, MessageAttributeNames=['All']):
+    def handle_message(self, body, attributes, MessageAttributeNames=['Price']):
         return
+
+    def get_messages_from_queue(self,queue_url):
+        """
+        Generates messages from an SQS queue.
+        :param queue_url: URL of the SQS queue to drain.
+        :return: The AWS response
+        """
+        _logger = logging.getLogger(__name__)
+        _logger.setLevel(logging.DEBUG)
+        sqs_client = boto3.client('sqs')
+        queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
+        while True:
+            response = queue.receive_messages(QueueUrl=queue.url,AttributeNames=['Price'],MaxNumberOfMessages=10)
+            if response != []:
+                print(response)
 
 class MyDaemon(Daemon):
     def run(self):
