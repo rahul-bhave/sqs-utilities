@@ -2,7 +2,6 @@
 This file will contain:
 a) Method to read from a queue
 b) Method to send the mesage to queue
-c) Method send messages to each queue and show the output recognizes which queue received which message
 
 """
 import argparse
@@ -46,9 +45,13 @@ class sqsmessage():
         sqs_client = boto3.client('sqs')
         queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
         while True:
-            response = queue.receive_messages(QueueUrl=queue.url, AttributeNames=["Price"], MaxNumberOfMessages=10)
-            if response != []:
-                print(response)
+            messages = sqs_client.receive_message(QueueUrl=queue.url,AttributeNames=['Price'])
+            if 'Messages' in messages:
+                for message in messages['Messages']:
+                    print(message['Body'])
+            else:
+                print('Queue is now empty')
+                break
 
     def send_message_to_queue(self,queue_url):
         """
