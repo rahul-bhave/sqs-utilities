@@ -75,7 +75,6 @@ if __name__=='__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument("--queue_url", required=True, help="Queue URL")
     args = ap.parse_args()
-    for message in sqsmessage_obj.get_messages_from_queue(args.queue_url):
-        print(json.dumps(message).encode('utf-8'))
+    sqsmessage_obj.get_messages_from_queue(args.queue_url)
 else:
         print('ERROR: Received incorrect comand line input arguments')
