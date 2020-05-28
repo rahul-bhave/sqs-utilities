@@ -34,7 +34,7 @@ class sqsmessage():
     # declaring templates directory
     template_directory = 'templates'
 
-    def get_messages_from_queue(self,queue_url):
+    def get_messages_from_queue(self,queue_url,key):
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
@@ -45,7 +45,7 @@ class sqsmessage():
         sqs_client = boto3.client('sqs')
         queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
         while True:
-            messages = sqs_client.receive_message(QueueUrl=queue.url,AttributeNames=['Price'])
+            messages = sqs_client.receive_message(QueueUrl=queue.url,AttributeNames=['key'])
             if 'Messages' in messages:
                 for message in messages['Messages']:
                     print(message['Body'])
@@ -77,7 +77,8 @@ if __name__=='__main__':
     sqsmessage_obj = sqsmessage()
     ap = argparse.ArgumentParser()
     ap.add_argument("--queue_url", required=True, help="Queue URL")
+    ap.add_argument("--key", required=True, help="Attribute Name")
     args = ap.parse_args()
-    sqsmessage_obj.get_messages_from_queue(args.queue_url)
+    sqsmessage_obj.get_messages_from_queue(args.queue_url,args.key)
 else:
         print('ERROR: Received incorrect comand line input arguments')
