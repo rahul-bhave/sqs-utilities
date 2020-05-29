@@ -5,6 +5,7 @@ b) Method to send the mesage to queue
 
 """
 import argparse
+import ast
 import boto3
 import json
 import logging
@@ -34,6 +35,13 @@ class sqsmessage():
     # declaring templates directory
     template_directory = 'templates'
 
+    def get_dict(my_string):
+        "Used this method from https://github.com/qxf2/skype_bots/blob/master/qxf2_skype_sender.py"
+        my_string = my_string.replace("'", "\"")
+        my_string = json.loads(my_string)
+
+        return my_string
+
     def get_messages_from_queue(self,queue_url):
         """
         Generates messages from an SQS queue.
@@ -50,18 +58,36 @@ class sqsmessage():
             if 'Messages' in messages:
                 for message in messages['Messages']:
                     if 'Body' in message.keys():
+                        print(type(message['Body']))
                         my_string = json.dumps(message['Body'])
                         my_string = my_string.replace('\\n', '')
                         my_string = my_string.replace('\\', '')
                         my_string = my_string.replace(' ','')
                         print(my_string)
+                        my_dict = json.dumps(my_string)
+                        print(my_dict)
+                        print(type(my_dict))
+
+                        """
+                        my_dict = self.get_dict(my_string)
+                        print("---Type of string after cleanup-----")
                         print(type(my_string))
                         my_string = json.dumps(my_string)
+                        print("---Type  after json.dumps-----")
                         print(type(my_string))
                         my_dict = json.loads(my_string)
+                        print("---Type  after json.loads----")
                         print(type(my_dict))
+                        print(my_dict)
+                        print("---Type  after eval----")
                         my_dict = eval(my_string)
                         print(type(my_dict))
+                        print("---Type  after literal_eval----")
+                        my_dict = ast.literal_eval(my_string)
+                        print(type(my_dict))
+
+                        """
+
             else:
                 print('Queue is now empty')
                 break
