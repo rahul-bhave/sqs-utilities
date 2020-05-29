@@ -1,6 +1,6 @@
 """
 This file will contain:
-a) Method to read from a queue
+a) Method to read from a queue based on Message Attribute.
 b) Method to send the mesage to queue
 
 """
@@ -46,28 +46,25 @@ class sqsmessage():
         sqs_client = boto3.client('sqs')
         queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
         while True:
-            messages = sqs_client.receive_message(QueueUrl=queue.url, MessageAttributeNames=['Price'])
+            messages = sqs_client.receive_message(QueueUrl=queue.url)
             if 'Messages' in messages:
                 for message in messages['Messages']:
-                        print(message['Body'])
+                    if 'Body' in message.keys():
+                        my_string = json.dumps(message['Body'])
+                        my_string = my_string.replace('\\n', '')
+                        my_string = my_string.replace('\\', '')
+                        my_string = my_string.replace(' ','')
+                        print(my_string)
+                        print(type(my_string))
+                        my_string = json.dumps(my_string)
+                        print(type(my_string))
+                        my_dict = json.loads(my_string)
+                        print(type(my_dict))
+                        my_dict = eval(my_string)
+                        print(type(my_dict))
             else:
                 print('Queue is now empty')
                 break
-
-        """
-        # Approach to filterout message based on key to be discarded if not useful
-        sqs_client = boto3.client('sqs')
-        queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
-        for message in sqs_client.receive_messages(MessageAttributeNames=['Author']):
-            author_text = ''
-            if message.message_attributes is not None:
-                author_name = message.message_attributes.get('Author').get('StringValue')
-                if author_name is not None:
-
-                    author_text = ' ({0})'.format(author_name)
-                    print('Hello, {0}!{1}'.format(message.body, author_text))
-        """
-
 
 
     def send_message_to_queue(self,queue_url):
