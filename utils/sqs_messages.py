@@ -60,13 +60,11 @@ class sqsmessage():
                     if 'Body' in message.keys():
                         print(type(message['Body']))
                         my_string = json.dumps(message['Body'])
-                        my_string = my_string.replace('\\n', '')
-                        my_string = my_string.replace('\\', '')
-                        my_string = my_string.replace(' ','')
                         print(my_string)
-                        my_dict = json.dumps(my_string)
-                        print(my_dict)
-                        print(type(my_dict))
+                        my_string = my_string.replace("'", "\"")
+                        my_string = json.loads(my_string)
+                        print(my_string)
+                        print(type(my_string))
 
                         """
                         my_dict = self.get_dict(my_string)
