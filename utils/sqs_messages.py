@@ -58,34 +58,19 @@ class sqsmessage():
             if 'Messages' in messages:
                 for message in messages['Messages']:
                     if 'Body' in message.keys():
-                        print(type(message['Body']))
-                        my_string = json.dumps(message['Body'])
+                        #print(type(message['Body']))
+                        my_string = json.dumps(message)
                         print(my_string)
                         my_string = my_string.replace("'", "\"")
                         my_string = json.loads(my_string)
                         print(my_string)
                         print(type(my_string))
-
-                        """
-                        my_dict = self.get_dict(my_string)
-                        print("---Type of string after cleanup-----")
-                        print(type(my_string))
-                        my_string = json.dumps(my_string)
-                        print("---Type  after json.dumps-----")
-                        print(type(my_string))
-                        my_dict = json.loads(my_string)
-                        print("---Type  after json.loads----")
-                        print(type(my_dict))
-                        print(my_dict)
-                        print("---Type  after eval----")
-                        my_dict = eval(my_string)
-                        print(type(my_dict))
-                        print("---Type  after literal_eval----")
-                        my_dict = ast.literal_eval(my_string)
-                        print(type(my_dict))
-
-                        """
-
+                        body_string = json.dumps((my_string['Body']))
+                        body_string = body_string.replace("'", "\"")
+                        body_string = json.loads(body_string)
+                        body_obj = json.loads(body_string)
+                        print(type(body_obj))
+                        print(body_obj['employees'][1]['name'])
             else:
                 print('Queue is now empty')
                 break
