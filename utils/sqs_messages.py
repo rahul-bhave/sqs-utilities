@@ -42,7 +42,6 @@ class sqsmessage():
         :param queue_url: URL of the SQS queue to drain.
         :return: The AWS response
         """
-
         _logger = logging.getLogger(__name__)
         _logger.setLevel(logging.DEBUG)
         sqs_client = boto3.client('sqs')
@@ -53,7 +52,10 @@ class sqsmessage():
                 for message in messages['Messages']:
                     if 'Body' in message.keys():
                         body_obj = self.get_dict(message['Body'])
-                        print(body_obj['employee'][0]['MessageAttributes']['Author'])
+                        if (body_obj['employee'][0]['MessageAttributes']['Author'].get('StringValue')) == 'Craig':
+                            print(body_obj['employee'])
+                        else:
+                            print("No such key exists")
             else:
                 print('Queue is now empty')
                 break
@@ -70,7 +72,6 @@ class sqsmessage():
         body_obj = json.loads(body_string)
 
         return body_obj
-
 
     def send_message_to_queue(self,queue_url):
         """
