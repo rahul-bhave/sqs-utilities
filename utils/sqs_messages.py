@@ -53,7 +53,7 @@ class sqsmessage():
                 for message in messages['Messages']:
                     if 'Body' in message.keys():
                         body_obj = self.get_dict(message['Body'])
-                        print(body_obj['employees'][0]['name'])
+                        print(body_obj['employee'][0]['MessageAttributes']['Author'])
             else:
                 print('Queue is now empty')
                 break
@@ -97,7 +97,9 @@ if __name__=='__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument("--queue_url", required=True, help="Queue URL")
     args = ap.parse_args()
+
     sqsmessage_obj.get_messages_from_queue(args.queue_url)
+    #sqsmessage_obj.send_message_to_queue(args.queue_url)
 
 else:
     print('ERROR: Received incorrect comand line input arguments')
