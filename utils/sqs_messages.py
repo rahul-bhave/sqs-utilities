@@ -36,7 +36,7 @@ class sqsmessage():
     # declaring templates directory
     template_directory = 'templates'
 
-    def get_messages_from_queue(self,queue_url):
+    def get_messages_from_queue(self,queue_url,emp_id):
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
@@ -52,10 +52,15 @@ class sqsmessage():
                 for message in messages['Messages']:
                     if 'Body' in message.keys():
                         body_obj = self.get_dict(message['Body'])
+                        print(body_obj)
+                        if (body_obj['employee'][0]['Id'])=='emp_id':
+                            print(emp_id)
+                            print(body_obj['employee'])
+                        """
                         if (body_obj['employee'][0]['MessageAttributes']['Author'].get('StringValue')) == 'Craig':
                             print(body_obj['employee'])
-                        else:
-                            print("No such key exists")
+                        """
+                        return body_obj
             else:
                 print('Queue is now empty')
                 break
@@ -72,6 +77,7 @@ class sqsmessage():
         body_obj = json.loads(body_string)
 
         return body_obj
+
 
     def send_message_to_queue(self,queue_url):
         """
@@ -97,9 +103,9 @@ if __name__=='__main__':
     sqsmessage_obj = sqsmessage()
     ap = argparse.ArgumentParser()
     ap.add_argument("--queue_url", required=True, help="Queue URL")
+    ap.add_argument("--emp_id", required=True, help="ID filter" )
     args = ap.parse_args()
-
-    sqsmessage_obj.get_messages_from_queue(args.queue_url)
+    sqsmessage_obj.get_messages_from_queue(args.queue_url,args.emp_id)
     #sqsmessage_obj.send_message_to_queue(args.queue_url)
 
 else:
