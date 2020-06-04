@@ -52,16 +52,24 @@ class sqsmessage():
             if 'Messages' in messages:
                 for message in messages['Messages']:
                     if 'Body' in message.keys():
-                        body_string = json.dumps((message['Body']))
-                        body_string = body_string.replace("'", "\"")
-                        body_string = json.loads(body_string)
-                        body_obj = json.loads(body_string)
-                        print(type(body_obj))
-                        print(body_obj['employees'][1]['name'])
+                        body_obj = self.get_dict(message['Body'])
+                        print(body_obj['employees'][0]['name'])
             else:
                 print('Queue is now empty')
                 break
 
+    def get_dict(self,body_string):
+        """
+        Generates dict from message body
+        :param string
+        :return dict object
+        """
+        body_string = json.dumps(body_string)
+        body_string = body_string.replace("'", "\"")
+        body_string = json.loads(body_string)
+        body_obj = json.loads(body_string)
+
+        return body_obj
 
 
     def send_message_to_queue(self,queue_url):
