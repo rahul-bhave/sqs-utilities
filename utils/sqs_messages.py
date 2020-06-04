@@ -28,19 +28,13 @@ os.environ['AWS_DEFAULT_REGION'] = aws_conf.AWS_DEFAULT_REGION
 os.environ['AWS_ACCESS_KEY_ID'] = aws_conf.AWS_ACCESS_KEY_ID
 os.environ['AWS_SECRET_ACCESS_KEY'] = aws_conf.AWS_SECRET_ACCESS_KEY
 
+
 class sqsmessage():
     # class for all sqs utility methods
     logger = logging.getLogger(__name__)
 
     # declaring templates directory
     template_directory = 'templates'
-
-    def get_dict(my_string):
-        "Used this method from https://github.com/qxf2/skype_bots/blob/master/qxf2_skype_sender.py"
-        my_string = my_string.replace("'", "\"")
-        my_string = json.loads(my_string)
-
-        return my_string
 
     def get_messages_from_queue(self,queue_url):
         """
@@ -58,14 +52,7 @@ class sqsmessage():
             if 'Messages' in messages:
                 for message in messages['Messages']:
                     if 'Body' in message.keys():
-                        #print(type(message['Body']))
-                        my_string = json.dumps(message)
-                        print(my_string)
-                        my_string = my_string.replace("'", "\"")
-                        my_string = json.loads(my_string)
-                        print(my_string)
-                        print(type(my_string))
-                        body_string = json.dumps((my_string['Body']))
+                        body_string = json.dumps((message['Body']))
                         body_string = body_string.replace("'", "\"")
                         body_string = json.loads(body_string)
                         body_obj = json.loads(body_string)
@@ -74,6 +61,7 @@ class sqsmessage():
             else:
                 print('Queue is now empty')
                 break
+
 
 
     def send_message_to_queue(self,queue_url):
@@ -104,4 +92,4 @@ if __name__=='__main__':
     sqsmessage_obj.get_messages_from_queue(args.queue_url)
 
 else:
-        print('ERROR: Received incorrect comand line input arguments')
+    print('ERROR: Received incorrect comand line input arguments')
