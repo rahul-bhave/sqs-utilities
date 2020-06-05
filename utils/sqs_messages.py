@@ -36,7 +36,7 @@ class sqsmessage():
     # declaring templates directory
     template_directory = 'templates'
 
-    def get_messages_from_queue(self,queue_url,emp_id):
+    def get_messages_from_queue_by_id(self,queue_url,emp_id):
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
@@ -54,12 +54,36 @@ class sqsmessage():
                         body_obj = self.get_dict(message['Body'])
                         print(body_obj)
                         if (body_obj['employee'][0]['Id'])=='emp_id':
-                            print(emp_id)
                             print(body_obj['employee'])
                         """
                         if (body_obj['employee'][0]['MessageAttributes']['Author'].get('StringValue')) == 'Craig':
                             print(body_obj['employee'])
                         """
+                        return body_obj
+            else:
+                print('Queue is now empty')
+                break
+
+    def get_messages_from_queue_by_author(self,queue_url,author):
+        """
+        Generates messages from an SQS queue.
+        :param queue_url: URL of the SQS queue to drain.
+        :author: author from the message
+        :return: The AWS response
+        """
+        _logger = logging.getLogger(__name__)
+        _logger.setLevel(logging.DEBUG)
+        sqs_client = boto3.client('sqs')
+        queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
+        while True:
+            messages = sqs_client.receive_message(QueueUrl=queue.url)
+            if 'Messages' in messages:
+                for message in messages['Messages']:
+                    if 'Body' in message.keys():
+                        body_obj = self.get_dict(message['Body'])
+                        print(body_obj)
+                        if (body_obj['employee'][0]['MessageAttributes']['Author'].get('StringValue')) == 'author':
+                            print(body_obj['employee'])
                         return body_obj
             else:
                 print('Queue is now empty')
@@ -103,9 +127,11 @@ if __name__=='__main__':
     sqsmessage_obj = sqsmessage()
     ap = argparse.ArgumentParser()
     ap.add_argument("--queue_url", required=True, help="Queue URL")
-    ap.add_argument("--emp_id", required=True, help="ID filter" )
+    # ap.add_argument("--emp_id", required=True, help="ID filter" )
+    ap.add_argument("--author", required=True, help="Author")
     args = ap.parse_args()
-    sqsmessage_obj.get_messages_from_queue(args.queue_url,args.emp_id)
+    #sqsmessage_obj.get_messages_from_queue_by_id(args.queue_url,args.emp_id)
+    sqsmessage_obj.get_messages_from_queue_by_author(args.queue_url,args.author)
     #sqsmessage_obj.send_message_to_queue(args.queue_url)
 
 else:
