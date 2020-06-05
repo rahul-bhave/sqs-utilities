@@ -40,7 +40,8 @@ class sqsmessage():
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
-        :return: The AWS response
+        :parm emp_id : filter criteria
+        :return: Object
         """
         _logger = logging.getLogger(__name__)
         _logger.setLevel(logging.DEBUG)
@@ -55,10 +56,6 @@ class sqsmessage():
                         print(body_obj)
                         if (body_obj['employee'][0]['Id'])=='emp_id':
                             print(body_obj['employee'])
-                        """
-                        if (body_obj['employee'][0]['MessageAttributes']['Author'].get('StringValue')) == 'Craig':
-                            print(body_obj['employee'])
-                        """
                         return body_obj
             else:
                 print('Queue is now empty')
@@ -102,7 +99,6 @@ class sqsmessage():
 
         return body_obj
 
-
     def send_message_to_queue(self,queue_url):
         """
         Sends message to specific queue
@@ -127,12 +123,13 @@ if __name__=='__main__':
     sqsmessage_obj = sqsmessage()
     ap = argparse.ArgumentParser()
     ap.add_argument("--queue_url", required=True, help="Queue URL")
-    # ap.add_argument("--emp_id", required=True, help="ID filter" )
     ap.add_argument("--author", required=True, help="Author")
     args = ap.parse_args()
-    #sqsmessage_obj.get_messages_from_queue_by_id(args.queue_url,args.emp_id)
     sqsmessage_obj.get_messages_from_queue_by_author(args.queue_url,args.author)
     #sqsmessage_obj.send_message_to_queue(args.queue_url)
+    #ap.add_argument("--emp_id", required=True, help="ID filter" )
+    #sqsmessage_obj.get_messages_from_queue_by_id(args.queue_url,args.emp_id)
+
 
 else:
     print('ERROR: Received incorrect comand line input arguments')
