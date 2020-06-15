@@ -118,14 +118,33 @@ class sqsmessage():
         response = squeue.send_message(MessageBody=json.dumps(sample_dict), MessageAttributes={})
         self.logger.info(response.get('MessageId'))
 
+    def get_messages_from_queue(self,queue_url):
+        """
+        Generates messages from an SQS queue.
+        :param queue_url: URL of the SQS queue to drain.
+        :return: Object
+        """
+        _logger = logging.getLogger(__name__)
+        _logger.setLevel(logging.DEBUG)
+        sqs_client = boto3.client('sqs')
+        queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
+        while True:
+            messages = sqs_client.receive_message(QueueUrl=queue.url)
+            if 'Messages' in messages:
+                for message in messages['Messages']:
+                    print(message['Body'])
+            else:
+                print('Queue is now empty')
+                break
+
 if __name__=='__main__':
     #Creating an instance of the class
     sqsmessage_obj = sqsmessage()
     ap = argparse.ArgumentParser()
     ap.add_argument("--queue_url", required=True, help="Queue URL")
-    ap.add_argument("--author", required=True, help="Author")
+    # ap.add_argument("--author", required=True, help="Author")
     args = ap.parse_args()
-    sqsmessage_obj.get_messages_from_queue_by_author(args.queue_url,args.author)
+    sqsmessage_obj.get_messages_from_queue(args.queue_url)
     #sqsmessage_obj.send_message_to_queue(args.queue_url)
     #ap.add_argument("--emp_id", required=True, help="ID filter" )
     #sqsmessage_obj.get_messages_from_queue_by_id(args.queue_url,args.emp_id)
