@@ -55,17 +55,14 @@ class sqsmessage():
         _logger.setLevel(logging.DEBUG)
         sqs_client = boto3.client('sqs')
         queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
-        while True:
-            messages = sqs_client.receive_message(QueueUrl=queue.url)
-            if 'Messages' in messages:
-                for message in messages['Messages']:
-                    if 'Body' in message.keys():
-                        body_obj = self.get_dict(message['Body'])
-                        self.logger.info(body_obj)
-        future = pool.submit(sqsmessage_obj.return_after_5_secs, (f"result: {queue_url}"))
-        awaitable = asyncio.wrap_future(future)
-        self.logger.info(f"waiting result: {queue_url}")
-        return await awaitable
+        messages = sqs_client.receive_message(QueueUrl=queue.url)
+        if 'Messages' in messages:
+            for message in messages['Messages']:
+                if 'Body' in message.keys():
+                    body_obj = self.get_dict(message['Body'])
+                    self.logger.info(body_obj)
+
+        return True
 
 
     async def send_message_to_queue(self,queue_url):
@@ -108,8 +105,9 @@ async def main():
     # https://www.integralist.co.uk/posts/python-asyncio/
     """
     sqsmessage_obj = sqsmessage()
-    tasks = [sqsmessage_obj.get_messages_from_queue('admin-filter'), sqsmessage_obj.get_messages_from_queue('admin-filter-error')]
-    result = await asyncio.gather(*tasks)
+    while True:
+        tasks = [sqsmessage_obj.get_messages_from_queue('admin-filter'), sqsmessage_obj.get_messages_from_queue('admin-filter-error')]
+        result = await asyncio.gather(*tasks)
 
 
 if __name__=='__main__':
