@@ -41,32 +41,33 @@ low_priority_bus = EventBus('low-priority-bus', priority=1)
 high_priority_bus = EventBus('high-priority-bus', priority=5)
 EventBus.register_buses([low_priority_bus, high_priority_bus])
 
-low_priority_queue = QueueConfig('low-priority-queue', low_priority_bus)
-high_priority_queue = QueueConfig('high-priority-queue', high_priority_bus)
+low_priority_queue = QueueConfig('admin-filter-error', low_priority_bus)
+high_priority_queue = QueueConfig('admin-filter', high_priority_bus)
 my_listener = MyListener([low_priority_queue, high_priority_queue])
 my_listener.listen()
 
-def get_messages_from_queue(queue_url):
-    """Generates messages from an SQS queue.
-
-    Note: this continues to generate messages until the queue is empty.
-    Every message on the queue will be deleted.
-
-    :param queue_url: URL of the SQS queue to drain.
-
-    """
-    sqs_client = boto3.client('sqs')
-    queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
-    while True:
-        response = queue.receive_messages(QueueUrl=queue.url)
-        if response != []:
-            print(response)
-        else:
-            print("No message in queue")
+def get_messages_from_queue(self,queue_url):
+        """
+        Generates messages from an SQS queue.
+        :param queue_url: URL of the SQS queue to drain.
+        :return: Object
+        """
+        _logger = logging.getLogger(__name__)
+        _logger.setLevel(logging.DEBUG)
+        sqs_client = boto3.client('sqs')
+        queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
+        while True:
+            messages = sqs_client.receive_message(QueueUrl=queue.url)
+            if 'Messages' in messages:
+                for message in messages['Messages']:
+                    print(message['Body'])
+            else:
+                print('Queue is now empty')
+                break
 
 if __name__=='__main__':
     "testing the multi_sqs_listner"
-    low_q_url = 'low-priority-queue'
-    high_q_url = 'high-priority-queue'
+    low_q_url = 'admin-filter-error'
+    high_q_url = 'admin-filter'
     get_messages_from_queue(low_q_url)
     get_messages_from_queue(high_q_url)

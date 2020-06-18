@@ -50,16 +50,10 @@ if __name__ == '__main__':
     ])
 
     # Queues
-    low_priority_queue = QueueConfig('low-priority-queue', low_priority_job_bus)
-    high_priority_queue = QueueConfig('high-priority-queue', administrative_event_bus)
+    low_priority_queue = QueueConfig('admin-filter-error', low_priority_job_bus)
+    high_priority_queue = QueueConfig('admin-filter', administrative_event_bus)
     admin_queue = QueueConfig('admin-queue', administrative_event_bus)
 
     # Listener
     my_listener = MyListener([low_priority_queue, high_priority_queue, admin_queue])
     my_listener.listen()
-
-    # sending messages
-    sqsmessage_object = sqsmessage()
-    sqsmessage.send_message_to_queue('low-priority-queue')
-    sqsmessage.send_message_to_queue('low-priority-queue')
-    sqsmessage.send_message_to_queue('low-priority-queue')

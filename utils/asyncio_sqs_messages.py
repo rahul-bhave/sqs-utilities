@@ -108,7 +108,7 @@ async def main():
     # https://www.integralist.co.uk/posts/python-asyncio/
     """
     sqsmessage_obj = sqsmessage()
-    tasks = [sqsmessage_obj.get_messages_from_queue('admin-filter'), sqsmessage_obj.get_messages_from_queue('admin-queue')]
+    tasks = [sqsmessage_obj.get_messages_from_queue('admin-filter'), sqsmessage_obj.get_messages_from_queue('admin-filter-error')]
     result = await asyncio.gather(*tasks)
 
 
