@@ -11,7 +11,6 @@ import json
 import logging
 import os,sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import conf.sqs_utilities_conf as conf
 import conf.aws_configuration_conf as aws_conf
 from pythonjsonlogger import jsonlogger
 
@@ -29,6 +28,7 @@ os.environ['AWS_DEFAULT_REGION'] = aws_conf.AWS_DEFAULT_REGION
 os.environ['AWS_ACCESS_KEY_ID'] = aws_conf.AWS_ACCESS_KEY_ID
 os.environ['AWS_SECRET_ACCESS_KEY'] = aws_conf.AWS_SECRET_ACCESS_KEY
 
+
 class Sqsmessage():
     # class for all sqs utility methods
     logger = logging.getLogger(__name__)
@@ -42,8 +42,8 @@ class Sqsmessage():
         :param queue_url: URL of the SQS queue to drain.
         :return: The AWS response
         """
-        sqs_client = boto3.client('sqs')
-        queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
+        sqs_client = self.get_sqs_client()
+        queue = self.get_sqs_queue(queue_url)
         messages = sqs_client.receive_message(QueueUrl=queue.url)
         if 'Messages' in messages:
             for message in messages['Messages']:
@@ -66,8 +66,8 @@ class Sqsmessage():
             sample_dict = json.loads(fp.read())
         sample_message = json.dumps(sample_dict)
         sample_message = sample_message.encode('utf-8')
-        sqs_client = boto3.client('sqs')
-        queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
+        sqs_client = self.get_sqs_client()
+        queue = self.get_sqs_queue(queue_url)
         response = queue.send_message(MessageBody=json.dumps(sample_dict), MessageAttributes={})
         self.logger.info(response.get('MessageId'))
 
@@ -84,6 +84,28 @@ class Sqsmessage():
 
         return body_obj
 
+    def get_sqs_client(self):
+        """
+        Return sqs_client object
+        :param none
+        :return sqs_client
+        """
+        sqs_client = boto3.client('sqs')
+        self.logger.info(sqs_client)
+
+        return sqs_client
+
+    def get_sqs_queue(self,queue_url):
+        """
+        Return queue object from queue_url
+        :param queue_url
+        :return queue
+        """
+        queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_url)
+        self.logger.info(queue)
+
+        return queue
+
 
 async def main():
     """
@@ -95,7 +117,6 @@ async def main():
     while True:
         tasks = [sqsmessage_obj.get_messages_from_queue('admin-filter'), sqsmessage_obj.get_messages_from_queue('admin-filter-error')]
         result = await asyncio.gather(*tasks)
-
 
 if __name__=='__main__':
     #Running asyncio main
