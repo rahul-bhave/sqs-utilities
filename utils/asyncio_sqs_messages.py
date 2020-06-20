@@ -2,7 +2,8 @@
 This file will contain:
 a) Method to read from a queue using asyncio.
 b) Method to send the mesage to queue asyncio.
-c) Method send messages to each queue and show the output recognizes which queue received which message
+c) Methos to get sqs client, queue and dict object
+d) Main method which schedules calls concurrently to deferent taks.
 
 """
 import asyncio
@@ -12,6 +13,7 @@ import logging
 import os,sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import conf.aws_configuration_conf as aws_conf
+import conf.sqs_utilities_conf as conf
 from pythonjsonlogger import jsonlogger
 
 
@@ -47,7 +49,9 @@ class Sqsmessage():
         messages = sqs_client.receive_message(QueueUrl=queue.url)
         if 'Messages' in messages:
             for message in messages['Messages']:
+                self.logger.info(f'In {queue.url}')
                 if 'Body' in message.keys():
+                    self.logger.info(f'In {queue.url}')
                     body_obj = self.get_dict(message['Body'])
                     self.logger.info(body_obj)
 
@@ -106,16 +110,28 @@ class Sqsmessage():
 
         return queue
 
-
 async def main():
     """
     Schedule calls concurrently
     # https://www.educative.io/blog/python-concurrency-making-sense-of-asyncio
     # https://www.integralist.co.uk/posts/python-asyncio/
     """
+    log_handler = logging.StreamHandler()
+    log_handler.setFormatter(jsonlogger.JsonFormatter())
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.addHandler(log_handler)
     sqsmessage_obj = Sqsmessage()
+    """
     while True:
-        tasks = [sqsmessage_obj.get_messages_from_queue('admin-filter'), sqsmessage_obj.get_messages_from_queue('admin-filter-error')]
+        tasks = [sqsmessage_obj.get_messages_from_queue('admin-filter'), sqsmessage_obj.get_messages_from_queue('admin-filter-error'),sqsmessage_obj.get_messages_from_queue('second-queue')]
+        result = await asyncio.gather(*tasks)
+
+    """
+    while True:
+        tasks = []
+        for every_queue_url in conf.QUEUE_URL_LIST:
+            tasks.append(sqsmessage_obj.get_messages_from_queue(every_queue_url))
         result = await asyncio.gather(*tasks)
 
 if __name__=='__main__':
