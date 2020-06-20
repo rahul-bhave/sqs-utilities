@@ -16,7 +16,6 @@ import conf.aws_configuration_conf as aws_conf
 import conf.sqs_utilities_conf as conf
 from pythonjsonlogger import jsonlogger
 
-
 # logging
 log_handler = logging.StreamHandler()
 log_handler.setFormatter(jsonlogger.JsonFormatter())
@@ -29,7 +28,6 @@ os.environ["AWS_ACCOUNT_ID"]= aws_conf.AWS_ACCOUNT_ID
 os.environ['AWS_DEFAULT_REGION'] = aws_conf.AWS_DEFAULT_REGION
 os.environ['AWS_ACCESS_KEY_ID'] = aws_conf.AWS_ACCESS_KEY_ID
 os.environ['AWS_SECRET_ACCESS_KEY'] = aws_conf.AWS_SECRET_ACCESS_KEY
-
 
 class Sqsmessage():
     # class for all sqs utility methods
@@ -49,9 +47,7 @@ class Sqsmessage():
         messages = sqs_client.receive_message(QueueUrl=queue.url)
         if 'Messages' in messages:
             for message in messages['Messages']:
-                self.logger.info(f'In {queue.url}')
                 if 'Body' in message.keys():
-                    self.logger.info(f'In {queue.url}')
                     body_obj = self.get_dict(message['Body'])
                     self.logger.info(body_obj)
 
@@ -116,18 +112,7 @@ async def main():
     # https://www.educative.io/blog/python-concurrency-making-sense-of-asyncio
     # https://www.integralist.co.uk/posts/python-asyncio/
     """
-    log_handler = logging.StreamHandler()
-    log_handler.setFormatter(jsonlogger.JsonFormatter())
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    logger.addHandler(log_handler)
     sqsmessage_obj = Sqsmessage()
-    """
-    while True:
-        tasks = [sqsmessage_obj.get_messages_from_queue('admin-filter'), sqsmessage_obj.get_messages_from_queue('admin-filter-error'),sqsmessage_obj.get_messages_from_queue('second-queue')]
-        result = await asyncio.gather(*tasks)
-
-    """
     while True:
         tasks = []
         for every_queue_url in conf.QUEUE_URL_LIST:
