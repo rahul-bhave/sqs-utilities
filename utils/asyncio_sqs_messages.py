@@ -118,8 +118,6 @@ class Sqsmessage():
 
         return number
 
-
-
     def get_sqs_client(self):
         """
         Return sqs_client object
