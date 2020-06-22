@@ -48,6 +48,7 @@ class Sqsmessage():
         if 'Messages' in messages:
             for message in messages['Messages']:
                 self.get_message_body(message)
+
         return True
 
 
@@ -89,9 +90,10 @@ class Sqsmessage():
         """
         if 'Body' in message.keys():
             body_obj = self.get_dict(message['Body'])
-            self.logger.info(body_obj)
+            if int(body_obj['MessageAttributes']['quantity']['Value']) > 70:
+                self.logger.info(body_obj)
 
-        return body_obj
+            return(body_obj)
 
 
     def get_sqs_client(self):
