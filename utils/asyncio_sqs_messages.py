@@ -40,17 +40,14 @@ class Sqsmessage():
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
-        :return: The AWS response
+        :return: True
         """
         sqs_client = self.get_sqs_client()
         queue = self.get_sqs_queue(queue_url)
         messages = sqs_client.receive_message(QueueUrl=queue.url)
         if 'Messages' in messages:
             for message in messages['Messages']:
-                if 'Body' in message.keys():
-                    body_obj = self.get_dict(message['Body'])
-                    self.logger.info(body_obj)
-
+                self.get_message_body(message)
         return True
 
 
@@ -84,6 +81,19 @@ class Sqsmessage():
 
         return body_obj
 
+    def get_message_body(self,message):
+        """
+        Generates message body from message in sqs queue
+        :param message: message
+        :return: message_body object
+        """
+        if 'Body' in message.keys():
+            body_obj = self.get_dict(message['Body'])
+            self.logger.info(body_obj)
+
+        return body_obj
+
+
     def get_sqs_client(self):
         """
         Return sqs_client object
@@ -105,6 +115,7 @@ class Sqsmessage():
         self.logger.info(queue)
 
         return queue
+
 
 async def main():
     """
