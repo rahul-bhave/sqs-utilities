@@ -14,6 +14,7 @@ import os,sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import conf.aws_configuration_conf as aws_conf
 import conf.sqs_utilities_conf as conf
+import conf.key_conf as key_conf
 from pythonjsonlogger import jsonlogger
 
 # logging
@@ -90,7 +91,11 @@ class Sqsmessage():
         """
         if 'Body' in message.keys():
             body_obj = self.get_dict(message['Body'])
-            if int(body_obj['MessageAttributes']['quantity']['Value']) > 70:
+            key = key_conf.key
+            key1 = key_conf.key1
+            key2 = key_conf.key2
+            number = key_conf.number
+            if int(body_obj[key][key1][key2]) > number:
                 self.logger.info(body_obj)
 
             return(body_obj)
