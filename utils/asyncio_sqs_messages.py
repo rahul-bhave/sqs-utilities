@@ -2,8 +2,9 @@
 This file will contain:
 a) Method to read from a queue using asyncio.
 b) Method to send the mesage to queue asyncio.
-c) Methos to get sqs client, queue and dict object
-d) Main method which schedules calls concurrently to deferent taks.
+c) Methods to get sqs client, queue and dict object
+d) Methods to get keys and filter criteria(for sample usage considering quntity > 90)
+e) Main method polls to the multiple queues (3 queues are listed in the sqs_utlities_conf.py file)
 
 """
 import asyncio
@@ -52,7 +53,6 @@ class Sqsmessage():
 
         return True
 
-
     async def send_message_to_queue(self,queue_url):
         """
         Sends message to specific queue
@@ -96,8 +96,6 @@ class Sqsmessage():
             if int(body_obj[key][key1][key2]) > number:
                 self.logger.info(body_obj)
 
-            return(body_obj)
-
     def get_keys(self):
         """
         Get the keys defined by user in the key_conf
@@ -107,7 +105,7 @@ class Sqsmessage():
         key1 = key_conf.key1
         key2 = key_conf.key2
 
-        return key,key1,key2
+        return key, key1, key2
 
     def get_number_filter_criteria(self):
         """
