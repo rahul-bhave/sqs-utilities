@@ -4,7 +4,7 @@ _This contains following_:
 
 1) _Utils folder_:
 
-a) asyncio_sqs_messages.py: You can run this utility using python utils/asyncio_sqs_messages.py. This file contains following two methods:
+ a) asyncio_sqs_messages.py: You can run this utility using python utils/asyncio_sqs_messages.py. This file contains following two methods:
 _a.1_: Method to get message from the queue.
 _a.2_: Method to send message to the queue.
 
