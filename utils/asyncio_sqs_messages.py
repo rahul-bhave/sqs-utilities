@@ -49,6 +49,7 @@ class Sqsmessage():
         messages = sqs_client.receive_message(QueueUrl=queue.url)
         if 'Messages' in messages:
             for message in messages['Messages']:
+                #self.logger.info(message)
                 self.get_message_body(message)
 
         return True
@@ -95,6 +96,8 @@ class Sqsmessage():
             number = self.get_number_filter_criteria()
             if int(body_obj[key][key1][key2]) > number:
                 self.logger.info(body_obj)
+
+        return True
 
     def get_filter_keys(self):
         """
