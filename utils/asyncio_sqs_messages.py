@@ -91,12 +91,12 @@ class Sqsmessage():
         """
         if 'Body' in message.keys():
             body_obj = self.get_dict(message['Body'])
-            key,key1,key2 = self.get_keys()
+            key,key1,key2 = self.get_filter_keys()
             number = self.get_number_filter_criteria()
             if int(body_obj[key][key1][key2]) > number:
                 self.logger.info(body_obj)
 
-    def get_keys(self):
+    def get_filter_keys(self):
         """
         Get the keys defined by user in the key_conf
         :return : key, key1, key2
