@@ -1,9 +1,5 @@
 """
-This config file will list details of key config
+This config file will list details of filter key
 """
-# Keys defined by user
-key = 'MessageAttributes'
-key1 = 'quantity'
-key2 = 'Value'
-# filter criteria value
-number = 90
+# filter_conf parameter
+filter_key="Value"

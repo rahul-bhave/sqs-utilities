@@ -9,6 +9,7 @@ e) Main method polls to the multiple queues (3 queues are listed in the sqs_utli
 """
 import asyncio
 import boto3
+import collections
 import json
 import logging
 import os,sys
@@ -33,10 +34,13 @@ os.environ['AWS_SECRET_ACCESS_KEY'] = aws_conf.AWS_SECRET_ACCESS_KEY
 
 class Sqsmessage():
     # class for all sqs utility methods
+
+
     logger = logging.getLogger(__name__)
 
     # declaring templates directory
     template_directory = 'samples'
+    dictionary = {}
 
     async def get_messages_from_queue(self,queue_url):
         """
@@ -49,8 +53,7 @@ class Sqsmessage():
         messages = sqs_client.receive_message(QueueUrl=queue.url)
         if 'Messages' in messages:
             for message in messages['Messages']:
-                #self.logger.info(message)
-                self.get_message_body(message)
+                self.filter_message(message)
 
         return True
 
@@ -80,44 +83,78 @@ class Sqsmessage():
         body_string = json.dumps(body_string)
         body_string = body_string.replace("'", "\"")
         body_string = json.loads(body_string)
-        body_obj = json.loads(body_string)
+        message_body_obj = json.loads(body_string)
 
-        return body_obj
+        return message_body_obj
 
-    def get_message_body(self,message):
+    def filter_message(self,message):
         """
-        Generates message body from message in sqs queue
+        Fetches filtered message from sqs queue
         :param message: message
         :return: message_body object
         """
+        sample_key_list, sample_value_list = self.get_sample_key_value_list()
         if 'Body' in message.keys():
-            body_obj = self.get_dict(message['Body'])
-            key,key1,key2 = self.get_filter_keys()
-            number = self.get_number_filter_criteria()
-            if int(body_obj[key][key1][key2]) > number:
-                self.logger.info(body_obj)
+            message_body_obj = self.get_dict(message['Body'])
+            message_body_obj_key_list, message_body_obj_value_list= self.get_value_key_list(message_body_obj)
+            if key_conf.filter_key in message_body_obj_key_list:
+                if key_conf.filter_key in sample_key_list:
+                    if any(int(ele) > int(sample_value_list[0]) for ele in message_body_obj_value_list):
+                        self.logger.info(message_body_obj)
 
         return True
 
-    def get_filter_keys(self):
+    def get_recursive_items(self, dictionary):
         """
-        Get the keys defined by user in the key_conf
-        :return : key, key1, key2
+        This method will be used to get keys and values
+        param: dict
+        return : Bool
         """
-        key = key_conf.key
-        key1 = key_conf.key1
-        key2 = key_conf.key2
+        for key, value in dictionary.items():
+            if type(value) is dict:
+                yield (key, value)
+                yield from self.get_recursive_items(value)
+            else:
+                yield(key,value)
 
-        return key, key1, key2
+        return True
 
-    def get_number_filter_criteria(self):
+    def get_dict_structure(self):
         """
-        Get the number filter criteria
-        :return : number
+        This method with dict structure of sample message json
+        return: dict
         """
-        number = key_conf.number
+        current_directory = os.path.dirname(os.path.realpath(__file__))
+        message_template = os.path.join(current_directory,self.template_directory,'sample_message.json')
+        with open(message_template,'r') as fp:
+            sample_dict = json.loads(fp.read())
 
-        return number
+        return sample_dict
+
+    def get_sample_key_value_list(self):
+        """
+        getting key values from sample json
+        return: key_list, value_list
+        """
+        sample_dict = []
+        sample_dict = self.get_dict_structure()
+        key_list, value_list  = self.get_value_key_list(sample_dict)
+
+        return key_list, value_list
+
+    def get_value_key_list(self, dictionary):
+        """
+        Method to get key and value list for any dict
+        param: dict object
+        return: key_list, value_list
+        """
+        key_list=[]
+        value_list=[]
+        for key,value in sqsmessage_obj.get_recursive_items(dictionary):
+            key_list = key_list + [key]
+            value_list = value_list = [value]
+
+        return(key_list, value_list)
 
     def get_sqs_client(self):
         """
@@ -159,6 +196,7 @@ if __name__=='__main__':
     #Running asyncio main
     _logger = logging.getLogger(__name__)
     _logger.setLevel(logging.DEBUG)
+    sqsmessage_obj = Sqsmessage()
     asyncio.run(main())
 else:
     print('ERROR: Received incorrect comand line input arguments')
