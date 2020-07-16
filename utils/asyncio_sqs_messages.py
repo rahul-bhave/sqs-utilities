@@ -3,7 +3,7 @@ This file will contain:
 a) Method to read from a queue using asyncio.
 b) Method to send the mesage to queue asyncio.
 c) Methods to get sqs client, queue and dict object
-d) Method to filter mesage based on the filter criteria defined.
+d) Method to filter mesage based on the filter key given by user.
 e) Main method polls to the multiple queues (3 queues are listed in the sqs_utlities_conf.py file)
 
 """
@@ -53,7 +53,6 @@ class Sqsmessage():
         sqs_client = self.get_sqs_client()
         queue = self.get_sqs_queue(queue_url)
         messages = sqs_client.receive_message(QueueUrl=queue.url)
-
         if 'Messages' in messages:
             for message in messages['Messages']:
                 self.filter_message(message,filter_key)
@@ -122,43 +121,6 @@ class Sqsmessage():
 
         return True
 
-    def get_dict_structure(self):
-        """
-        This method with dict structure of sample message json
-        return: dict
-        """
-        current_directory = os.path.dirname(os.path.realpath(__file__))
-        message_template = os.path.join(current_directory,self.template_directory,'sample_message.json')
-        with open(message_template,'r') as fp:
-            sample_dict = json.loads(fp.read())
-
-        return sample_dict
-
-    def get_sample_key_value_list(self):
-        """
-        getting key values from sample json
-        return: key_list, value_list
-        """
-        sample_dict = []
-        sample_dict = self.get_dict_structure()
-        key_list, value_list  = self.get_value_key_list(sample_dict)
-
-        return key_list, value_list
-
-    def get_value_key_list(self, dictionary):
-        """
-        Method to get key and value list for any dict
-        param: dict object
-        return: key_list, value_list
-        """
-        key_list=[]
-        value_list=[]
-        for key,value in sqsmessage_obj.get_recursive_items(dictionary):
-            key_list = key_list + [key]
-            value_list = value_list = [value]
-
-        return(key_list, value_list)
-
     def get_sqs_client(self):
         """
         Return sqs_client object
@@ -189,7 +151,7 @@ async def main():
     # https://www.integralist.co.uk/posts/python-asyncio/
     """
     sqsmessage_obj = Sqsmessage()
-    filter_key=key_conf.filter_key
+    filter_key = input(f'Enter filter key: ')
     while True:
         tasks = []
         for every_queue_url in conf.QUEUE_URL_LIST:
