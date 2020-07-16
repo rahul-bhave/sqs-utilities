@@ -3,7 +3,7 @@ This file will contain:
 a) Method to read from a queue using asyncio.
 b) Method to send the mesage to queue asyncio.
 c) Methods to get sqs client, queue and dict object
-d) Methods to get keys and filter criteria(for sample usage considering quntity > 90)
+d) Method to filter mesage based on the filter criteria defined.
 e) Main method polls to the multiple queues (3 queues are listed in the sqs_utlities_conf.py file)
 
 """
@@ -44,7 +44,7 @@ class Sqsmessage():
         dictionary = {}
 
 
-    async def get_messages_from_queue(self,queue_url):
+    async def get_messages_from_queue(self,queue_url,filter_key):
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
@@ -53,9 +53,10 @@ class Sqsmessage():
         sqs_client = self.get_sqs_client()
         queue = self.get_sqs_queue(queue_url)
         messages = sqs_client.receive_message(QueueUrl=queue.url)
+
         if 'Messages' in messages:
             for message in messages['Messages']:
-                self.filter_message(message)
+                self.filter_message(message,filter_key)
 
         return True
 
@@ -89,7 +90,7 @@ class Sqsmessage():
 
         return message_body_obj
 
-    def filter_message(self,message,filter_key=key_conf.filter_key):
+    def filter_message(self,message,filter_key):
         """
         Fetches filtered message from sqs queue
         :param message: message
@@ -188,17 +189,17 @@ async def main():
     # https://www.integralist.co.uk/posts/python-asyncio/
     """
     sqsmessage_obj = Sqsmessage()
+    filter_key=key_conf.filter_key
     while True:
         tasks = []
         for every_queue_url in conf.QUEUE_URL_LIST:
-            tasks.append(sqsmessage_obj.get_messages_from_queue(every_queue_url))
+            tasks.append(sqsmessage_obj.get_messages_from_queue(every_queue_url,filter_key))
         result = await asyncio.gather(*tasks)
 
 if __name__=='__main__':
     #Running asyncio main
     _logger = logging.getLogger(__name__)
     _logger.setLevel(logging.DEBUG)
-    sqsmessage_obj = Sqsmessage()
     asyncio.run(main())
 else:
     print('ERROR: Received incorrect comand line input arguments')
