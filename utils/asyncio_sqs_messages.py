@@ -7,6 +7,7 @@ d) Methods to get keys and filter criteria(for sample usage considering quntity 
 e) Main method polls to the multiple queues (3 queues are listed in the sqs_utlities_conf.py file)
 
 """
+import argparse
 import asyncio
 import boto3
 import collections
@@ -34,13 +35,14 @@ os.environ['AWS_SECRET_ACCESS_KEY'] = aws_conf.AWS_SECRET_ACCESS_KEY
 
 class Sqsmessage():
     # class for all sqs utility methods
-
-
     logger = logging.getLogger(__name__)
 
-    # declaring templates directory
-    template_directory = 'samples'
-    dictionary = {}
+    def __init__(self):
+        # intialise the class
+        # declaring templates directory
+        template_directory = 'samples'
+        dictionary = {}
+
 
     async def get_messages_from_queue(self,queue_url):
         """
@@ -87,20 +89,20 @@ class Sqsmessage():
 
         return message_body_obj
 
-    def filter_message(self,message):
+    def filter_message(self,message,filter_key=key_conf.filter_key):
         """
         Fetches filtered message from sqs queue
         :param message: message
         :return: message_body object
         """
-        sample_key_list, sample_value_list = self.get_sample_key_value_list()
         if 'Body' in message.keys():
             message_body_obj = self.get_dict(message['Body'])
-            message_body_obj_key_list, message_body_obj_value_list= self.get_value_key_list(message_body_obj)
-            if key_conf.filter_key in message_body_obj_key_list:
-                if key_conf.filter_key in sample_key_list:
-                    if any(int(ele) > int(sample_value_list[0]) for ele in message_body_obj_value_list):
-                        self.logger.info(message_body_obj)
+            if filter_key in message_body_obj.keys():
+                self.logger.info(message_body_obj)
+            else:
+                self.logger.info(f"No message polled with key {filter_key} from the queue at this moment ")
+        else:
+            self.logger.info("No message has body attribute")
 
         return True
 
