@@ -5,7 +5,7 @@ b) Method to send the mesage to queue asyncio.
 c) Methods to get sqs client, queue and dict object
 d) Method to filter mesage based on the filter key given by user.
 e) Main method polls to the multiple queues (3 queues are listed in the sqs_utlities_conf.py file)
-
+Ref#http://www.compciv.org/guides/python/fundamentals/dictionaries-overview/
 """
 import argparse
 import asyncio
@@ -13,6 +13,7 @@ import boto3
 import collections
 import json
 import logging
+import operator
 import os,sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import conf.aws_configuration_conf as aws_conf
@@ -44,18 +45,19 @@ class Sqsmessage():
         dictionary = {}
 
 
-    async def get_messages_from_queue(self,queue_url,filter_key):
+    async def get_messages_from_queue(self,queue_url,filter_key,filter_value,filter_criteria):
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
         :return: True
         """
+
         sqs_client = self.get_sqs_client()
         queue = self.get_sqs_queue(queue_url)
         messages = sqs_client.receive_message(QueueUrl=queue.url)
         if 'Messages' in messages:
             for message in messages['Messages']:
-                self.filter_message(message,filter_key)
+                self.filter_message(message,filter_key,filter_value,filter_criteria)
 
         return True
 
@@ -89,7 +91,7 @@ class Sqsmessage():
 
         return message_body_obj
 
-    def filter_message(self,message,filter_key):
+    def filter_message(self,message,filter_key,filter_value,filter_criteria):
         """
         Fetches filtered message from sqs queue
         :param message: message
@@ -97,10 +99,10 @@ class Sqsmessage():
         """
         if 'Body' in message.keys():
             message_body_obj = self.get_dict(message['Body'])
-            if filter_key in message_body_obj.keys():
-                self.logger.info(message_body_obj)
-            else:
-                self.logger.info(f"No message polled with key {filter_key} from the queue at this moment ")
+            message_body_obj_key_list, message_body_obj_value_list= self.get_value_key_list(message_body_obj)
+            if filter_key in message_body_obj_key_list:
+                if any(filter_criteria(int(ele), int(filter_value)) for ele in message_body_obj_value_list):
+                    self.logger.info(message_body_obj)
         else:
             self.logger.info("No message has body attribute")
 
@@ -120,6 +122,20 @@ class Sqsmessage():
                 yield(key,value)
 
         return True
+
+    def get_value_key_list(self, dictionary):
+        """
+        Method to get key and value list for any dict
+        param: dict object
+        return: key_list, value_list
+        """
+        key_list=[]
+        value_list=[]
+        for key,value in self.get_recursive_items(dictionary):
+            key_list = key_list + [key]
+            value_list = value_list = [value]
+
+        return(key_list, value_list)
 
     def get_sqs_client(self):
         """
@@ -152,10 +168,12 @@ async def main():
     """
     sqsmessage_obj = Sqsmessage()
     filter_key = input(f'Enter filter key: ')
+    filter_value=input(f'Eneter filter value: ')
+    filter_criteria=operator.gt
     while True:
         tasks = []
         for every_queue_url in conf.QUEUE_URL_LIST:
-            tasks.append(sqsmessage_obj.get_messages_from_queue(every_queue_url,filter_key))
+            tasks.append(sqsmessage_obj.get_messages_from_queue(every_queue_url,filter_key,filter_value,filter_criteria))
         result = await asyncio.gather(*tasks)
 
 if __name__=='__main__':
