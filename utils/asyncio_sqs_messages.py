@@ -99,8 +99,7 @@ class Sqsmessage():
         if 'Body' in message.keys():
             message_body_obj = self.get_dict(message['Body'])
             message_body_obj_key_list, message_body_obj_value_list= self.get_value_key_list(message_body_obj)
-            if filter_key in message_body_obj_key_list:
-                if filter_criteria == 'greater than':
+            if filter_key in message_body_obj_key_list and filter_criteria == 'greater than':
                     if any(operator.gt(int(ele), int(filter_value)) for ele in message_body_obj_value_list):
                         self.logger.info(message_body_obj)
         else:
