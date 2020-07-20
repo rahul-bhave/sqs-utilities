@@ -7,7 +7,6 @@ d) Method to filter mesage based on the filter key given by user.
 e) Main method polls to the multiple queues (3 queues are listed in the sqs_utlities_conf.py file)
 Ref#http://www.compciv.org/guides/python/fundamentals/dictionaries-overview/
 """
-import argparse
 import asyncio
 import boto3
 import collections
@@ -101,8 +100,9 @@ class Sqsmessage():
             message_body_obj = self.get_dict(message['Body'])
             message_body_obj_key_list, message_body_obj_value_list= self.get_value_key_list(message_body_obj)
             if filter_key in message_body_obj_key_list:
-                if any(filter_criteria(int(ele), int(filter_value)) for ele in message_body_obj_value_list):
-                    self.logger.info(message_body_obj)
+                if filter_criteria == 'greater than':
+                    if any(operator.gt(int(ele), int(filter_value)) for ele in message_body_obj_value_list):
+                        self.logger.info(message_body_obj)
         else:
             self.logger.info("No message has body attribute")
 
@@ -169,7 +169,8 @@ async def main():
     sqsmessage_obj = Sqsmessage()
     filter_key = input(f'Enter filter key: ')
     filter_value=input(f'Eneter filter value: ')
-    filter_criteria=operator.gt
+    filter_criteria = input(f'Enter operation name: ')
+
     while True:
         tasks = []
         for every_queue_url in conf.QUEUE_URL_LIST:
