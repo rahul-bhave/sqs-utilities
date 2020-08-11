@@ -48,17 +48,19 @@ class Sqsmessage():
         """
         Generates messages from an SQS queue.
         :param queue_url: URL of the SQS queue to drain.
-        :return: True
+        :filter_key: dict key(This will be hard coaded in main method for this blog)
+        :filter_value: dict value(This will be hard coaded in main method for this blog)
+        :filter_criteria: filter criteria greater than,equal to,
+        less than(This will be hard coaded in main method for this blog)
         """
-
         sqs_client = self.get_sqs_client()
         queue = self.get_sqs_queue(queue_url)
         messages = sqs_client.receive_message(QueueUrl=queue.url)
         if 'Messages' in messages:
             for message in messages['Messages']:
                 self.filter_message(message,filter_key,filter_value,filter_criteria)
-
-        return True
+        else:
+            self.logger.info("No messages polled from the queue at this moment")
 
     async def send_message_to_queue(self,queue_url):
         """
@@ -94,24 +96,33 @@ class Sqsmessage():
         """
         Fetches filtered message from sqs queue
         :param message: message
-        :return: message_body object
+        :filter_key: dict key
+        :filter_value: dict value
+        :filter_criteria: filter criteria greater than,equal to,less than
+        :return: print filtered message
         """
         if 'Body' in message.keys():
             message_body_obj = self.get_dict(message['Body'])
-            message_body_obj_key_list, message_body_obj_value_list= self.get_value_key_list(message_body_obj)
+            message_body_obj_key_list, message_body_obj_value_list \
+            = self.get_value_key_list(message_body_obj)
             if filter_key in message_body_obj_key_list and filter_criteria == 'greater than':
-                    if any(operator.gt(int(ele), int(filter_value)) for ele in message_body_obj_value_list):
+                    if any(operator.gt(int(ele), int(filter_value)) \
+                           for ele in message_body_obj_value_list):
                         self.logger.info(message_body_obj)
+                    else:
+                        self.logger.info("Filter value not found in the message value list")
+            else:
+                self.logger.info \
+                ("Filter key not found in message key list or Filter criteria not defined")
         else:
-            self.logger.info("No message has body attribute")
+            self.logger.info("Message does not have body attribute")
 
-        return True
 
     def get_recursive_items(self, dictionary):
         """
         This method will be used to get keys and values
         param: dict
-        return : Bool
+        return : key,value
         """
         for key, value in dictionary.items():
             if type(value) is dict:
@@ -120,7 +131,7 @@ class Sqsmessage():
             else:
                 yield(key,value)
 
-        return True
+        return key, value
 
     def get_value_key_list(self, dictionary):
         """
@@ -166,14 +177,11 @@ async def main():
     # https://www.integralist.co.uk/posts/python-asyncio/
     """
     sqsmessage_obj = Sqsmessage()
-    filter_key = input(f'Enter filter key: ')
-    filter_value=input(f'Eneter filter value: ')
-    filter_criteria = input(f'Enter operation name: ')
-
     while True:
         tasks = []
         for every_queue_url in conf.QUEUE_URL_LIST:
-            tasks.append(sqsmessage_obj.get_messages_from_queue(every_queue_url,filter_key,filter_value,filter_criteria))
+            tasks.append(sqsmessage_obj.get_messages_from_queue(every_queue_url, \
+            filter_key='quantity',filter_value='70', filter_criteria='greater than'))
         result = await asyncio.gather(*tasks)
 
 if __name__=='__main__':
