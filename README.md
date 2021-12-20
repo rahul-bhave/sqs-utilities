@@ -22,7 +22,7 @@ a) This contains sample_message.json file which can be used to send the sample m
 
 # Test Setup:
 
-_pre-conditions_
+_preconditions_
 
 1) Create predefined three SQS.
 2) The SQS queues, should have pre-populated SQS messages.
